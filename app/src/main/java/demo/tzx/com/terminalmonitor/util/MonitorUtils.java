@@ -48,6 +48,7 @@ public class MonitorUtils {
             e.printStackTrace();
         }
         return Double.parseDouble(result)/1000/1000+"GH";
+        //
     }
 
 
