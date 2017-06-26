@@ -22,7 +22,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         initPermission();
         ServiceUtils.init(MainActivity.this);
-        ServiceUtils.startService();
+        ServiceUtils.startService("","","","","","");
+
     }
     public void onclick(View view){
         Intent intent=new Intent(this,TwoActivity.class);
@@ -60,4 +61,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
     }
+
 }
+

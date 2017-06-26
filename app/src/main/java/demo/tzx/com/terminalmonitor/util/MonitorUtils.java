@@ -17,6 +17,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 
 
@@ -26,11 +27,14 @@ import java.io.InputStreamReader;
 
 public class MonitorUtils {
 
+    public static int defaultState=1;
+    public static int changeState=2;
+
+
     public static String getInformation() {
         //Android : Letv,Letv X501,23,6.0
         String os = "Android : " + Build.MANUFACTURER+","+ Build.MODEL+ ","
                 + Build.VERSION.RELEASE;
-    Log.e("TAG","--------------"+os);
     return os;
     }
     // 实时获取CPU当前频率（单位KHZ）
@@ -50,7 +54,30 @@ public class MonitorUtils {
         return Double.parseDouble(result)/1000/1000+"GH";
 
     }
+    // 获取CPU最大频率（单位KHZ）
+    // "/system/bin/cat" 命令行
+    // "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq" 存储最大频率的文件的路径
+    public static String getMaxCpuFreq() {
+        String result = "";
+        ProcessBuilder cmd;
+        try {
+            String[] args = { "/system/bin/cat",
+                    "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq" };
+            cmd = new ProcessBuilder(args);
+            Process process = cmd.start();
+            InputStream in = process.getInputStream();
+            byte[] re = new byte[24];
+            while (in.read(re) != -1) {
+                result = result + new String(re);
+            }
+            in.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            result = "N/A";
+        }
 
+        return Double.parseDouble(result.trim())/1000/1000+"GH";
+    }
 
     //当前cpu率
     public static String getProcessCpuRate()
@@ -73,8 +100,10 @@ public class MonitorUtils {
         float cpuRate = 100 * (processCpuTime2 - processCpuTime1)
                 / (totalCpuTime2 - totalCpuTime1);
 
-        return cpuRate+"%";
+        return cpuRate+"";
     }
+
+
     public static long getTotalCpuTime()
     { // 获取系统总CPU使用时间
         String[] cpuInfos = null;
@@ -120,28 +149,7 @@ public class MonitorUtils {
     }
 
 
-    //6、系统的版本信息
-    //      ?
-    /*public static String[] getVersion() {
-        String[] version = {"null", "null", "null", "null"};
-        String str1 = "/proc/version";
-        String str2;
-        String[] arrayOfString;
-        try {
-            FileReader localFileReader = new FileReader(str1);
-            BufferedReader localBufferedReader = new BufferedReader(
-                    localFileReader, 8192);
-            str2 = localBufferedReader.readLine();
-            arrayOfString = str2.split("\\s+");
-            version[0] = arrayOfString[2];//KernelVersion
-            localBufferedReader.close();
-        } catch (IOException e) {
-        }
-        version[1] = Build.VERSION.RELEASE;// firmware version
-        version[2] = Build.MODEL;//model
-        version[3] = Build.DISPLAY;//system version
-        return version;
-    }*/
+
 
 
     // 7、mac地址和开机时间
@@ -164,7 +172,7 @@ public class MonitorUtils {
      * @return
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public static String getSDTotalSize(Context mContext) {
+    public static String getSDTotalSize(Context mContext,int state) {
         File sdDir = null;
         Log.e("TAG","-------------"+ Environment.getExternalStorageState());
         boolean sdCardExist = Environment.getExternalStorageState()
@@ -173,40 +181,42 @@ public class MonitorUtils {
         {
             sdDir = Environment.getExternalStorageDirectory();//获取跟目录
         }else{
-            return  getInternalMemorySize(mContext);
+            return  getInternalMemorySize(mContext,state);
         }
         StatFs stat = new StatFs(sdDir.getPath());
         long blockSize = stat.getBlockSize();
         long totalBlocks = stat.getBlockCount();
+        if(state==1){
+            return blockSize * totalBlocks+"";
+        }
         return Formatter.formatFileSize(mContext, blockSize * totalBlocks);
     }
 
     /**
-     * 获取手机内部存储空间
+     * 获取手机SD卡总大小
      *
      * @param context
      * @return 以M,G为单位的容量
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public static String getInternalMemorySize(Context context) {
+    public static String getInternalMemorySize(Context context,int state) {
         File file = Environment.getDataDirectory();
         StatFs statFs = new StatFs(file.getPath());
         long blockSizeLong = statFs.getBlockSizeLong();
         long blockCountLong = statFs.getBlockCountLong();
         long size = blockCountLong * blockSizeLong;
+        if(state==1){
+            return size+"";
+        }
         return Formatter.formatFileSize(context, size);
     }
-
-
-
-
     /**
      * 获得sd卡剩余容量，即可用大小
      *
      * @return
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public static String getSDAvailableSize(Context mContext) {
+    public static String getSDAvailableSize(Context mContext ,int state) {
         File path=null;
         boolean sdCardExist = Environment.getExternalStorageState()
                 .equals(Environment.MEDIA_MOUNTED);   //判断sd卡是否存在
@@ -214,30 +224,48 @@ public class MonitorUtils {
         {
             path = Environment.getExternalStorageDirectory();//获取跟目录
         }else{
-            return  getAvailableInternalMemorySize(mContext);
+            return  getAvailableInternalMemorySize(mContext,state);
         }
          path = Environment.getExternalStorageDirectory();
         StatFs stat = new StatFs(path.getPath());
         long blockSize = stat.getBlockSize();
         long availableBlocks = stat.getAvailableBlocks();
+        if(state==1){
+           return blockSize * availableBlocks+"";
+        }
         return Formatter.formatFileSize(mContext, blockSize * availableBlocks);
     }
-
     /**
-     * 获取手机内部可用存储空间
-     *
+     * 获取手机SD卡可用存储空间
      * @param context
      * @return 以M,G为单位的容量
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public static String getAvailableInternalMemorySize(Context context) {
+    public static String getAvailableInternalMemorySize(Context context,int state) {
         File file = Environment.getDataDirectory();
         StatFs statFs = new StatFs(file.getPath());
         long availableBlocksLong = statFs.getAvailableBlocksLong();
         long blockSizeLong = statFs.getBlockSizeLong();
+        if(state==1){
+            return availableBlocksLong
+                    * blockSizeLong+"";
+        }
         return Formatter.formatFileSize(context, availableBlocksLong
                 * blockSizeLong);
     }
+    /**
+     * 获取手机SD卡使用的大小
+     */
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    public static String  getSDUseSize(Context mContext){
+        long SDAvailableSize=Long.valueOf( getSDAvailableSize(mContext,defaultState));
+        long SDTotalSize=Long.valueOf(getSDTotalSize(mContext,defaultState));
+        return (SDTotalSize-SDAvailableSize)*100/SDTotalSize+"";
+    }
+
+
+
+
 
     /**
      * 获得机身内存总大小
@@ -245,11 +273,7 @@ public class MonitorUtils {
      * @return
      */
 
-    public static String getTotalMemory(Context mContext){
-       /* ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        ActivityManager.MemoryInfo memoryInfo=new ActivityManager.MemoryInfo();
-        am.getMemoryInfo(memoryInfo);
-        return memoryInfo.totalMem;//需要API16以上*/
+    public static String getTotalMemory(Context mContext,int state){
         try {
             File file = new File("/proc/meminfo");
             FileInputStream fis = new FileInputStream(file);
@@ -264,6 +288,9 @@ public class MonitorUtils {
                 }
             }
             long result = Long.parseLong(sb.toString()) * 1024;//因为读出来的是KB,所以这里转换为B方便后面的格式化
+            if(state==1){
+               return result+"";
+            }
             return Formatter.formatFileSize(mContext,result);//字节
         } catch (Exception e) {
             e.printStackTrace();
@@ -275,12 +302,25 @@ public class MonitorUtils {
      * 获取手机可用的剩余运行内存
      * @return 字节数
      */
-    public static String getAvailMemory(Context mContext){
+    public static String getAvailMemory(Context mContext,int state){
         ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo memoryInfo=new ActivityManager.MemoryInfo();
         am.getMemoryInfo(memoryInfo);
+        if(state==1){
+           return memoryInfo.availMem+"";
+        }
         return Formatter.formatFileSize(mContext, memoryInfo.availMem);
     }
+    /**
+     * 获取手机使用的内存
+     * @return 字节数
+     */
+    public static String getUseMemory(Context mContext){
+    long totalMemory=Long.valueOf(getTotalMemory(mContext,defaultState));
+    long availMemory=Long.valueOf(getAvailMemory(mContext,defaultState));
+        return  ""+(totalMemory-availMemory)*100/totalMemory;
+    }
+
 
 
 }

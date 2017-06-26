@@ -2,7 +2,6 @@ package demo.tzx.com.terminalmonitor;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-
 import demo.tzx.com.terminalmonitor.util.ServiceUtils;
 
 

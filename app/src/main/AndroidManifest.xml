@@ -20,11 +20,6 @@
         </activity>
 
         <service android:name=".service.MonitorService" >
-            <intent-filter>
-                <action android:name="com.demo.SERVICE_MONITOR" />
-                <category android:name="android.intent.category.default" />
-            </intent-filter>
-
         </service>
 
         <activity android:name=".TwoActivity"></activity>

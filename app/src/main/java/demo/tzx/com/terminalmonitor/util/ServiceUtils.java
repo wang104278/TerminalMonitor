@@ -19,13 +19,23 @@ public class ServiceUtils {
         mContext = context;
     }
 
-    public static void startService() {
+    /**
+     *
+     * @param httpUrl 地址
+     * @param tenancy_id 商户编号
+     * @param organ_code 机构编号
+     * @param registeredTime 设备注册时间
+     * @param equipmentType 设备类型
+     * @param devices_ip Mac地址
+     */
+    public static void startService(String httpUrl,String tenancy_id,String organ_code,String registeredTime,String equipmentType,String devices_ip) {
         Intent intent = new Intent(mContext,MonitorService.class);
-        intent.putExtra("posNum","--------TAG------");
-        intent.putExtra("posName","--------TAG------");
-        intent.putExtra("registeredTime","--------TAG------");
-        intent.putExtra("posType","--------TAG------");
-
+        intent.putExtra("httpUrl",httpUrl);
+        intent.putExtra("tenancy_id",tenancy_id);
+        intent.putExtra("organ_code",organ_code);
+        intent.putExtra("registeredTime",registeredTime);
+        intent.putExtra("equipmentType",equipmentType);
+        intent.putExtra("devices_ip",devices_ip);
         mContext.startService(intent);
 
     }
